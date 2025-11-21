@@ -14,3 +14,8 @@ pulled pork
 hamburger
 cavity
 accident
+<<<<<<< HEAD
+=======
+pedestrian
+accident
+>>>>>>> f06c856f06c08e958de77bff945c034ab8340847
