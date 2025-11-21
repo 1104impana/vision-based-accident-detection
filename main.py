@@ -61,13 +61,16 @@ while True:
         y2=int(row[3])
         d=int(row[5])
         c=class_list[d]
-
-        cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),1)
-        cvzone.putTextRect(frame,f'{c}',(x1,y1),1,1)
+        if 'accident' in c:
+         cv2.rectangle(frame,(x1,y1),(x2,y2),(0,0,255),1)
+         cvzone.putTextRect(frame,f'{c}',(x1,y1),1,1)
+        else:
+         cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),1)
+         cvzone.putTextRect(frame,f'{c}',(x1,y1),1,1)
             
     
     cv2.imshow("RGB", frame)
-    if cv2.waitKey(1)&0xFF==27:
+    if cv2.waitKey(0)&0xFF==27:
         break
 cap.release()  
 cv2.destroyAllWindows()
