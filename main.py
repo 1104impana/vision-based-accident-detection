@@ -60,99 +60,26 @@ while True:
     if count % 3 != 0:
         continue
 
-    frame = cv2.resize(frame, (1020, 500))
-
-    results = model.predict(frame)
-    a = results[0].boxes.data
-    px = pd.DataFrame(a).astype("float")
-
-    detections = []
-    person_centroids = []
-    car_boxes = []
-    accident_class_detected = False
-
-    # ===================== PARSE DETECTIONS =====================
-    for _, row in px.iterrows():
-        x1 = int(row[0]); y1 = int(row[1])
-        x2 = int(row[2]); y2 = int(row[3])
-        cls = int(row[5])
-
-        cname = class_list[cls]
-        box = [x1,y1,x2,y2]
-
-        cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),2)
-        cvzone.putTextRect(frame, f'{cname}', (x1,y1), 1, 1)
-
-        # car detection
-        if cls == IDX_CAR:
-            car_boxes.append(box)
-
-        # person detection
-        if cls == IDX_PERSON:
-            c = centroid(box)
-            person_centroids.append((box, c))
-
-        # YOLO accident-class detection
-        if cls in IDX_ACCIDENT:
-            accident_class_detected = True
-
-    # ===================== COLLISION-BASED ACCIDENT DETECTION =====================
-    car_collision = False
-    for i in range(len(car_boxes)):
-        for j in range(i+1, len(car_boxes)):
-            cA = centroid(car_boxes[i])
-            cB = centroid(car_boxes[j])
-            if dist(cA, cB) < 80:  # collision threshold
-                car_collision = True
-                break
-
-    # ===================== FINAL ACCIDENT CHECK =====================
-    if (car_collision or accident_class_detected) and not accident_detected:
-        accident_detected = True
-        mobile_popup("🚨 ACCIDENT DETECTED!")
-        print("ACCIDENT DETECTED")
-
-    # ===================== PERSON STILLNESS DETECTION =====================
-    if accident_detected:
-        for box, cent in person_centroids:
-            # match to existing track
-            best_id = None
-            best_dist = 9999
-            for pid, info in person_tracks.items():
-                d = dist(info["last"], cent)
-                if d < 50 and d < best_dist:
-                    best_dist = d
-                    best_id = pid
-
-            if best_id is None:
-                best_id = next_pid
-                next_pid += 1
-                person_tracks[best_id] = {
-                    "last": cent,
-                    "anchor": cent,
-                    "still_start": time.time()
-                }
-            else:
-                info = person_tracks[best_id]
-                # check movement small?
-                if dist(info["anchor"], cent) <= 15:
-                    if time.time() - info["still_start"] >= 3 and not person_still_alerted:
-                        person_still_alerted = True
-                        mobile_popup("🆘 PERSON STILL DETECTED (possible injury)")
-                        print("PERSON STILL DETECTED")
-                else:
-                    info["anchor"] = cent
-                    info["still_start"] = time.time()
-
-                info["last"] = cent
-
-    # ===================== DISPLAY =====================
-    if accident_detected:
-        cv2.putText(frame, "ACCIDENT DETECTED - Monitoring person movement", (20,30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
-
+#    print(px)
+    for index,row in px.iterrows():
+#        print(row)
+ 
+        x1=int(row[0])
+        y1=int(row[1])
+        x2=int(row[2])
+        y2=int(row[3])
+        d=int(row[5])
+        c=class_list[d]
+        if 'accident' in c:
+         cv2.rectangle(frame,(x1,y1),(x2,y2),(0,0,255),1)
+         cvzone.putTextRect(frame,f'{c}',(x1,y1),1,1)
+        else:
+         cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),1)
+         cvzone.putTextRect(frame,f'{c}',(x1,y1),1,1)
+            
+    
     cv2.imshow("RGB", frame)
-    if cv2.waitKey(1) & 0xFF == 27:
+    if cv2.waitKey(0)&0xFF==27:
         break
 
 cap.release()
